@@ -287,6 +287,93 @@ fl.r.global.plot <- fl.r.global.preds %>%
 
 fl.r.global.plot
 
+# ROCKING THRESHOLD ----
+
+# transport thresholds with just velocity as explanatory
+# To compare to field for thresholds, we want to consider only pieces 4-23 cm in size.
+
+rockdatNOXL <- rockdat %>% filter(size != "24-39 cm") %>% droplevels()
+
+rk.thresh <- glm(rock ~ 
+                     calculated.velocity_corrected,
+                   data = rockdatNOXL,
+                   family = binomial(link='logit'))
+
+car::Anova(rk.thresh) # velocity effect
+
+r.squaredGLMM(rk.thresh)
+
+plot(simulateResiduals(fittedModel = rk.thresh)) # good
+
+ldr <- dose.p(rk.thresh, p=c(0.1,0.5,0.9))
+
+ldr.SE = attr(ldr, "SE")
+ldr = data.frame(LD = attr(ldr, 'p'),
+                Dose = as.vector(ldr),
+                SE = ldr.SE) %>% 
+  mutate(lower=Dose - SE*qnorm(0.975),
+         upper=Dose + SE*qnorm(0.975)) #95% CI are ~1.96 times the SE.
+
+ldr
+
+# Rocking threshold for rubble piece 4-8cm 
+
+levels(rockdatNOXL$size)
+
+rockdatS <- rockdatNOXL %>% filter(size != "16-23 cm") %>%
+                  filter(size != "9-15 cm") %>% droplevels()
+
+rk.thresh2 <- glm(rock ~ 
+                   calculated.velocity_corrected,
+                 data = rockdatS,
+                 family = binomial(link='logit'))
+
+car::Anova(rk.thresh2) # velocity effect
+
+r.squaredGLMM(rk.thresh2)
+
+plot(simulateResiduals(fittedModel = rk.thresh2)) # good
+
+ldr2 <- dose.p(rk.thresh2, p=c(0.1,0.5,0.9))
+
+ldr2.SE = attr(ldr2, "SE")
+ldr2 = data.frame(LD = attr(ldr2, 'p'),
+                 Dose = as.vector(ldr2),
+                 SE = ldr2.SE) %>% 
+  mutate(lower=Dose - SE*qnorm(0.975),
+         upper=Dose + SE*qnorm(0.975)) #95% CI are ~1.96 times the SE.
+
+ldr2 # 50% threshold at 0.2 m/s
+
+# What about for unbranched small pieces? (result given in 3rd paragraph of discussion)
+
+
+rockdatSU <- rockdatS %>% filter(branched != "Branched") %>% droplevels()
+
+str(rockdatSU)
+
+rk.thresh3 <- glm(rock ~ 
+                    calculated.velocity_corrected,
+                  data = rockdatSU,
+                  family = binomial(link='logit'))
+
+car::Anova(rk.thresh3) # velocity effect
+
+r.squaredGLMM(rk.thresh3)
+
+plot(simulateResiduals(fittedModel = rk.thresh3)) # good
+
+ldr3 <- dose.p(rk.thresh3, p=c(0.1,0.5,0.9))
+
+ldr3.SE = attr(ldr3, "SE")
+ldr3 = data.frame(LD = attr(ldr3, 'p'),
+                  Dose = as.vector(ldr3),
+                  SE = ldr3.SE) %>% 
+  mutate(lower=Dose - SE*qnorm(0.975),
+         upper=Dose + SE*qnorm(0.975)) #95% CI are ~1.96 times the SE.
+
+ldr3 # 50% threshold at 0.18 m/s
+
 # TRANSPORT -----
 
 # Table S9 -----
